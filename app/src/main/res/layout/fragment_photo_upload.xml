@@ -5,12 +5,30 @@
     android:layout_height="match_parent"
     tools:context=".fragments.PhotoUploadFragment">
 
-    <TextView
+    <!-- ImageView to show uploaded photo -->
+    <ImageView
+        android:id="@+id/ivUploadedPhoto"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_gravity="center"
+        android:scaleType="fitCenter"
+        android:adjustViewBounds="true"
+        android:background="@color/suitify_surface"
+        android:padding="8dp"
+        android:visibility="visible"
+        android:contentDescription="Yüklenen Fotoğraf" />
+
+    <!-- Optional: Keep helpful label for photo section -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:text="Photo Upload"
         android:gravity="center"
-        android:textSize="36sp"
-        android:textStyle="bold"/>
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:layout_gravity="bottom"
+        android:textColor="@color/white"
+        android:background="@color/suitify_primary"
+        android:padding="8dp" />
 
 </FrameLayout>

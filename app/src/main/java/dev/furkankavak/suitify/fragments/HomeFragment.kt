@@ -19,16 +19,16 @@ import android.view.ViewGroup
 import androidx.navigation.fragment.findNavController
 import dev.furkankavak.suitify.R
 import dev.furkankavak.suitify.databinding.FragmentHomeBinding
+import androidx.activity.result.PickVisualMediaRequest
 
 class HomeFragment : Fragment() {
 
     private lateinit var _binding : FragmentHomeBinding
     private val binding get() = _binding
 
-    private lateinit var galleryLauncher: ActivityResultLauncher<Intent>
     private lateinit var cameraLauncher: ActivityResultLauncher<Intent>
-    private lateinit var permissionGalleryLauncher: ActivityResultLauncher<String>
     private lateinit var permissionCameraLauncher: ActivityResultLauncher<String>
+    private lateinit var photoPickerLauncher: ActivityResultLauncher<PickVisualMediaRequest>
 
     private var selectedImageUri: Uri? = null
 
@@ -44,14 +44,14 @@ class HomeFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
 
-        permissionGalleryLauncher =
-            registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
-                if (isGranted) openGallery() else Toast.makeText(
-                    requireContext(),
-                    "Galeri izni reddedildi",
-                    Toast.LENGTH_SHORT
-                ).show()
+        photoPickerLauncher = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+            uri?.let {
+                // Yüksek kaliteli URI'yi direkt kullan
+                selectedImageUri = it
+                showSelectedImage(it)
+            }
         }
+        
         permissionCameraLauncher =
             registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
                 if (isGranted) openCamera() else Toast.makeText(
@@ -60,35 +60,22 @@ class HomeFragment : Fragment() {
                     Toast.LENGTH_SHORT
                 ).show()
             }
-        galleryLauncher =
-            registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-                if (result.resultCode == Activity.RESULT_OK && result.data != null) {
-                    val uri = result.data!!.data
-                    uri?.let {
-                        showSelectedImage(it)
-                    }
-                }
-            }
         cameraLauncher =
             registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
                 if (result.resultCode == Activity.RESULT_OK && result.data != null) {
                     val bitmap = result.data!!.extras?.get("data") as? Bitmap
                     bitmap?.let {
                         val uri = saveBitmapToGallery(it)
-                        uri?.let { showSelectedImage(it) }
+                        uri?.let { 
+                            selectedImageUri = it
+                            showSelectedImage(it)
+                        }
                     }
                 }
             }
 
         binding.btnPickGallery.setOnClickListener {
-            when {
-                ContextCompat.checkSelfPermission(
-                    requireContext(),
-                    Manifest.permission.READ_MEDIA_IMAGES
-                ) == PackageManager.PERMISSION_GRANTED -> openGallery()
-
-                else -> permissionGalleryLauncher.launch(Manifest.permission.READ_MEDIA_IMAGES)
-            }
+            photoPickerLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
         }
         binding.btnOpenCamera.setOnClickListener {
             when {
@@ -101,18 +88,13 @@ class HomeFragment : Fragment() {
             }
         }
         binding.btnContinue.setOnClickListener {
-
-            val action = R.id.action_homeFragment_to_photoUploadFragment
-
-            findNavController().navigate(action)
+            selectedImageUri?.let { uri ->
+                val bundle = Bundle()
+                bundle.putString("selectedImageUri", uri.toString())
+                val action = R.id.action_homeFragment_to_photoUploadFragment
+                findNavController().navigate(action, bundle)
+            }
         }
-    }
-
-
-    private fun openGallery() {
-        val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
-        intent.type = "image/*"
-        galleryLauncher.launch(intent)
     }
 
 
@@ -123,10 +105,7 @@ class HomeFragment : Fragment() {
 
 
     private fun showSelectedImage(imageUri: Uri) {
-        binding.ivSelectedImage.setImageURI(imageUri)
-        binding.ivSelectedImage.visibility = View.VISIBLE
-        binding.btnContinue.visibility = View.VISIBLE
-        selectedImageUri = imageUri
+        binding.continueCardView.visibility = View.VISIBLE
     }
 
 

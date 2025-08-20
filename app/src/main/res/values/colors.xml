@@ -1,5 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Suitify Modern AI Palette -->
+    <color name="suitify_primary">#6366F1</color>
+    <color name="suitify_dark_bg">#F8FAFC</color>
+    <color name="suitify_surface">#FFFFFF</color>
+    <color name="suitify_card">#F1F5F9</color>
+    <color name="suitify_accent">#8B5CF6</color>
+    <color name="suitify_text_primary">#1E293B</color>
+    <color name="suitify_text_secondary">#64748B</color>
+    <color name="suitify_border">#E2E8F0</color>
+    <color name="suitify_success">#10B981</color>
+    <color name="white">#FFFFFF</color>
     <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
 </resources>
