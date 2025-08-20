@@ -1,16 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android=
+    "http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".fragments.SplashFragment">
+    tools:context=".fragments.SplashFragment"
+    android:background="#0e2a3f">
+
+    <ImageView
+        android:id="@+id/ivLogo"
+        android:layout_gravity="center"
+        android:src="@drawable/suit_logo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="80dp"
+        android:contentDescription="logo"/>
 
     <TextView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="Splash Fragment"
-        android:gravity="center"
-        android:textSize="36sp"
-        android:textStyle="bold"/>
+        android:id="@+id/tvLogo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Let's Suit Up"
+        android:textColor="@color/white"
+        android:textSize="48sp"
+        android:layout_gravity="center"
+        android:layout_marginTop="100dp"
+        android:fontFamily="@font/helvatica"/>
+
 
 </FrameLayout>

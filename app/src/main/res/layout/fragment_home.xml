@@ -5,22 +5,48 @@
     android:layout_height="match_parent"
     tools:context=".fragments.HomeFragment">
 
-
-    <TextView
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="Home Fragment"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal|top"
+        android:orientation="horizontal"
         android:gravity="center"
-        android:textSize="36sp"
-        android:textStyle="bold"
-        android:layout_marginBottom="100dp"/>
+        android:layout_marginTop="48dp">
+
+        <Button
+            android:id="@+id/btnPickGallery"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Galeriden Seç" />
+
+        <Space
+            android:layout_width="32dp"
+            android:layout_height="wrap_content" />
+
+        <Button
+            android:id="@+id/btnOpenCamera"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Kamerayı Aç" />
+    </LinearLayout>
+
+    <ImageView
+        android:id="@+id/ivSelectedImage"
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+        android:layout_gravity="center"
+        android:layout_marginTop="150dp"
+        android:scaleType="centerCrop"
+        android:visibility="gone"
+        android:contentDescription="Seçilen resim" />
 
     <Button
-        android:id="@+id/btnChangeFragment"
+        android:id="@+id/btnContinue"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Change Fragment"
-        android:layout_gravity="center"
-        android:layout_marginTop="50dp"/>
+        android:text="Devam Et"
+        android:layout_gravity="center_horizontal|bottom"
+        android:layout_marginBottom="48dp"
+        android:visibility="gone" />
 
 </FrameLayout>

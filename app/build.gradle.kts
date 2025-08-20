@@ -62,4 +62,7 @@ dependencies {
 
     //OkHttp logging Interceptor
     implementation(libs.logging.interceptor)
+
+    //Glide
+    implementation(libs.glide)
 }
