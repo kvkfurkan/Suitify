@@ -161,16 +161,16 @@
 
         </LinearLayout>
 
-        <!-- Continue Button -->
+        <!-- Continue Card (Initially Hidden) -->
         <androidx.cardview.widget.CardView
+            android:id="@+id/continueCardView"
             android:layout_width="match_parent"
             android:layout_height="56dp"
-            android:layout_marginTop="8dp"
-            app:cardBackgroundColor="@color/suitify_success"
-            app:cardCornerRadius="12dp"
-            app:cardElevation="2dp"
+            android:layout_marginTop="16dp"
             android:visibility="gone"
-            android:id="@+id/continueCardView">
+            app:cardBackgroundColor="@color/suitify_primary"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="4dp">
 
             <Button
                 android:id="@+id/btnContinue"

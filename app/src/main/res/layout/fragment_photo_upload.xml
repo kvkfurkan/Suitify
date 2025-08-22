@@ -1,34 +1,103 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/suitify_dark_bg"
+    android:padding="16dp"
     tools:context=".fragments.PhotoUploadFragment">
 
-    <!-- ImageView to show uploaded photo -->
-    <ImageView
-        android:id="@+id/ivUploadedPhoto"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_gravity="center"
-        android:scaleType="fitCenter"
-        android:adjustViewBounds="true"
-        android:background="@color/suitify_surface"
-        android:padding="8dp"
-        android:visibility="visible"
-        android:contentDescription="Yüklenen Fotoğraf" />
-
-    <!-- Optional: Keep helpful label for photo section -->
+    <!-- Header -->
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Photo Upload"
-        android:gravity="center"
-        android:textSize="18sp"
+        android:text="Fotoğrafınızı Düzenleyin"
+        android:textColor="@color/suitify_text_primary"
+        android:textSize="24sp"
         android:textStyle="bold"
-        android:layout_gravity="bottom"
-        android:textColor="@color/white"
-        android:background="@color/suitify_primary"
-        android:padding="8dp" />
+        android:fontFamily="@font/helvatica"
+        android:gravity="center"
+        android:layout_marginBottom="16dp" />
 
-</FrameLayout>
+    <!-- Image Container -->
+    <androidx.cardview.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginBottom="16dp"
+        app:cardBackgroundColor="@color/suitify_surface"
+        app:cardCornerRadius="12dp"
+        app:cardElevation="4dp">
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <!-- Image View -->
+            <ImageView
+                android:id="@+id/ivUploadedPhoto"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_gravity="center"
+                android:scaleType="centerCrop"
+                android:adjustViewBounds="true"
+                android:contentDescription="Yüklenen Fotoğraf" />
+
+            <!-- Processing Progress Bar -->
+            <ProgressBar
+                android:id="@+id/progressBar"
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:layout_gravity="center"
+                android:visibility="gone"
+                android:indeterminate="true" />
+
+        </FrameLayout>
+
+    </androidx.cardview.widget.CardView>
+
+    <!-- Controls Section -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginBottom="16dp">
+
+        <!-- Info Text -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Profesyonel takım elbiseli vesikalık fotoğraf oluşturun"
+            android:textColor="@color/suitify_text_secondary"
+            android:textSize="14sp"
+            android:fontFamily="@font/helvatica"
+            android:gravity="center"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Edit Button -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            app:cardBackgroundColor="@color/suitify_primary"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="4dp">
+
+            <Button
+                android:id="@+id/btnEditPhoto"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="🎨  Profesyonel Vesikalık Oluştur"
+                android:textColor="@color/white"
+                android:textSize="16sp"
+                android:fontFamily="@font/helvatica"
+                android:background="@android:color/transparent"
+                android:textAllCaps="false"
+                android:textStyle="bold" />
+
+        </androidx.cardview.widget.CardView>
+
+    </LinearLayout>
+
+</LinearLayout>

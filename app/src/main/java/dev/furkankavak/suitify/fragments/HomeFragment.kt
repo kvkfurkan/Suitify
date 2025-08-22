@@ -4,7 +4,6 @@ import android.Manifest
 import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
@@ -20,6 +19,8 @@ import androidx.navigation.fragment.findNavController
 import dev.furkankavak.suitify.R
 import dev.furkankavak.suitify.databinding.FragmentHomeBinding
 import androidx.activity.result.PickVisualMediaRequest
+import dev.furkankavak.suitify.utils.PhotoManager
+import java.io.File
 
 class HomeFragment : Fragment() {
 
@@ -29,8 +30,10 @@ class HomeFragment : Fragment() {
     private lateinit var cameraLauncher: ActivityResultLauncher<Intent>
     private lateinit var permissionCameraLauncher: ActivityResultLauncher<String>
     private lateinit var photoPickerLauncher: ActivityResultLauncher<PickVisualMediaRequest>
+    private lateinit var photoManager: PhotoManager
 
     private var selectedImageUri: Uri? = null
+    private var currentPhotoFile: File? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -42,11 +45,12 @@ class HomeFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        
 
+        photoManager = PhotoManager(requireContext())
 
         photoPickerLauncher = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
             uri?.let {
-                // Yüksek kaliteli URI'yi direkt kullan
                 selectedImageUri = it
                 showSelectedImage(it)
             }
@@ -62,14 +66,10 @@ class HomeFragment : Fragment() {
             }
         cameraLauncher =
             registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-                if (result.resultCode == Activity.RESULT_OK && result.data != null) {
-                    val bitmap = result.data!!.extras?.get("data") as? Bitmap
-                    bitmap?.let {
-                        val uri = saveBitmapToGallery(it)
-                        uri?.let { 
-                            selectedImageUri = it
-                            showSelectedImage(it)
-                        }
+                if (result.resultCode == Activity.RESULT_OK) {
+                    currentPhotoFile?.let { file ->
+                        selectedImageUri = photoManager.getUriForFile(file)
+                        showSelectedImage(selectedImageUri!!)
                     }
                 }
             }
@@ -87,35 +87,37 @@ class HomeFragment : Fragment() {
                 else -> permissionCameraLauncher.launch(Manifest.permission.CAMERA)
             }
         }
-        binding.btnContinue.setOnClickListener {
-            selectedImageUri?.let { uri ->
-                val bundle = Bundle()
-                bundle.putString("selectedImageUri", uri.toString())
-                val action = R.id.action_homeFragment_to_photoUploadFragment
-                findNavController().navigate(action, bundle)
-            }
-        }
+
     }
 
 
     private fun openCamera() {
-        val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
-        cameraLauncher.launch(intent)
+        try {
+            currentPhotoFile = photoManager.createImageFile()
+            currentPhotoFile?.let { file ->
+                val photoURI = photoManager.getUriForFile(file)
+                val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE).apply {
+                    putExtra(MediaStore.EXTRA_OUTPUT, photoURI)
+                }
+                cameraLauncher.launch(intent)
+            }
+        } catch (e: Exception) {
+            Toast.makeText(requireContext(), "Kamera açılırken hata oluştu: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
     }
 
 
     private fun showSelectedImage(imageUri: Uri) {
-        binding.continueCardView.visibility = View.VISIBLE
+        // Fotoğraf seçilir seçilmez direkt PhotoUploadFragment'a geç
+        val bundle = Bundle()
+        bundle.putString("selectedImageUri", imageUri.toString())
+        val action = R.id.action_homeFragment_to_photoUploadFragment
+        findNavController().navigate(action, bundle)
     }
 
 
-    private fun saveBitmapToGallery(bitmap: Bitmap): Uri? {
-        val path = MediaStore.Images.Media.insertImage(
-            requireContext().contentResolver,
-            bitmap,
-            "SuitifyCamera",
-            "Taken from camera"
-        )
-        return path?.let { Uri.parse(it) }
+    override fun onDestroy() {
+        super.onDestroy()
+        photoManager.cleanupTempFiles()
     }
 }

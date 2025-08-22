@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -15,6 +17,15 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        
+        // FAL.AI API Key - local.properties dosyasından güvenli şekilde okunur
+        val localProperties = Properties()
+        val localPropertiesFile = rootProject.file("local.properties")
+        if (localPropertiesFile.exists()) {
+            localProperties.load(localPropertiesFile.inputStream())
+        }
+        val falApiKey = localProperties.getProperty("FAL_API_KEY") ?: "YOUR_API_KEY_HERE"
+        buildConfigField("String", "FAL_KEY", "\"$falApiKey\"")
     }
 
     buildTypes {
@@ -36,6 +47,7 @@ android {
 
     buildFeatures {
         viewBinding = true
+        buildConfig = true
     }
 }
 
@@ -65,4 +77,7 @@ dependencies {
 
     //Glide
     implementation(libs.glide)
+    
+    //ExifInterface for image rotation fix
+    implementation(libs.androidx.exifinterface)
 }
