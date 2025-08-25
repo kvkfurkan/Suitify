@@ -10,35 +10,15 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.*
 import retrofit2.Response
+import com.google.gson.*
+import java.lang.reflect.Type
 
 object FalKontextApi {
     private const val BASE_URL = "https://fal.run/"
-    private const val MODEL_ID = "fal-ai/flux-pro/kontext"
     
-    // Optimize edilmiş vesikalık fotoğraf promptu
-    const val PASSPORT_PHOTO_PROMPT = "Professional passport photo with SMALL HEAD and natural lighting: " +
-            "HEAD SIZE (CRITICAL - MULTIPLE EMPHASIS): " +
-            "- Head MAXIMUM 45% of total frame height " +
-            "- SIGNIFICANTLY smaller head than typical photos " +
-            "- Compact head proportions for passport standards " +
-            "- REDUCE head size, do NOT enlarge " +
-            "- Head should appear SMALL in the frame " +
-            "- TINY head relative to body and background " +
-            "LIGHTING (KEEP CURRENT QUALITY): " +
-            "- Natural matte finish, no shine or reflection " +
-            "- Flat even lighting like reference photo " +
-            "- No artificial enhancement or gloss " +
-            "BASIC REQUIREMENTS: " +
-            "- Extract person, remove background " +
-            "- Add dark business suit, white shirt, dark tie " +
-            "- Frontal passport angle " +
-            "- Clean gray background " +
-            "- Preserve facial identity " +
-            "- ONLY the subject person, no other objects or items in the frame"
-    
-    // API Key - BuildConfig'ten güvenli bir şekilde alınıyor
-    // FAL.AI resmi dokümantasyonuna göre: export FAL_KEY="YOUR_API_KEY"
-    // Android'de environment variable yerine BuildConfig kullanıyoruz
+
+    const val DEFAULT_PROMPT = "Remove background. Keep face and identity unchanged, with natural head-body proportion. Add realistic dark suit, white shirt and plain tie. Make it look like a professional photo."
+
     private val API_KEY = BuildConfig.FAL_KEY
 
     private val loggingInterceptor = HttpLoggingInterceptor().apply {
@@ -57,7 +37,12 @@ object FalKontextApi {
         }
         .build()
 
-    private val gson = com.google.gson.GsonBuilder()
+    private val gson = GsonBuilder()
+        .setLenient()
+        .serializeNulls()
+        .setPrettyPrinting()
+        .registerTypeAdapter(Int::class.java, SafeIntegerDeserializer())
+        .registerTypeAdapter(Integer::class.java, SafeIntegerDeserializer())
         .create()
     
     private val retrofit = Retrofit.Builder()
@@ -68,7 +53,6 @@ object FalKontextApi {
 
     private val apiService = retrofit.create(FalApiService::class.java)
 
-    // Direkt istek gönder ve sonucu al
     suspend fun processImage(
         imageData: ByteArray,
         prompt: String
@@ -80,7 +64,7 @@ object FalKontextApi {
             val request = FalRequest.create(
                 prompt = prompt,
                 imageUrl = base64Image,
-                guidanceScale = 7.0,
+                guidanceScale = 3.5,
                 numImages = 1,
                 outputFormat = "jpeg",
                 safetyTolerance = "2",
@@ -101,61 +85,7 @@ object FalKontextApi {
         }
     }
 
-    // Queue ile asenkron istek gönder
-    suspend fun submitImageRequest(
-        imageData: ByteArray,
-        prompt: String,
-        webhookUrl: String? = null
-    ): Result<String> = withContext(Dispatchers.IO) {
-        try {
-            val base64Image = "data:image/jpeg;base64," +
-                    Base64.encodeToString(imageData, Base64.NO_WRAP)
 
-            val request = FalRequest.create(
-                prompt = prompt,
-                imageUrl = base64Image,
-                guidanceScale = 3.5,
-                numImages = 1,
-                outputFormat = "jpeg",
-                safetyTolerance = "2",
-                enhancePrompt = true,
-                webhookUrl = webhookUrl
-            )
-
-            val response = apiService.submitRequest(request)
-            
-            if (response.isSuccessful) {
-                response.body()?.let { result ->
-                    Result.success(result.requestId)
-                } ?: Result.failure(Exception("Empty response"))
-            } else {
-                Result.failure(Exception("API Error: ${response.code()} - ${response.message()}"))
-            }
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    // İstek durumunu kontrol et
-    suspend fun checkRequestStatus(
-        requestId: String
-    ): Result<RequestStatus> = withContext(Dispatchers.IO) {
-        try {
-            val response = apiService.getRequestStatus(requestId)
-            
-            if (response.isSuccessful) {
-                response.body()?.let { status ->
-                    Result.success(status)
-                } ?: Result.failure(Exception("Empty response"))
-            } else {
-                Result.failure(Exception("API Error: ${response.code()} - ${response.message()}"))
-            }
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    // Tamamlanan isteğin sonucunu al
     suspend fun getRequestResult(
         requestId: String
     ): Result<KontextResult> = withContext(Dispatchers.IO) {
@@ -173,16 +103,9 @@ object FalKontextApi {
             Result.failure(e)
         }
     }
-
-    // Geriye dönük uyumluluk için
-    suspend fun processImageWithSubscribe(
-        imageData: ByteArray,
-        prompt: String,
-        onProgress: (String) -> Unit = {}
-    ): Result<KontextResult> = processImage(imageData, prompt)
 }
 
-// Retrofit API Service Interface
+
 interface FalApiService {
     @POST("fal-ai/flux-pro/kontext")
     suspend fun processImage(
@@ -205,18 +128,18 @@ interface FalApiService {
     ): Response<KontextResult>
 }
 
-// Request Data Classes
+
 data class FalRequest(
     val prompt: String,
     val image_url: String,
-    val guidance_scale: Double = 3.5,
+    val guidance_scale: Double = 7.0,
     val num_images: Int = 1,
     val output_format: String = "jpeg",
     val safety_tolerance: String = "2",
     val enhance_prompt: Boolean = true,
-    val sync_mode: Boolean = true,  // Hemen sonuç almak için true
+    val sync_mode: Boolean = true,
     val webhook_url: String? = null,
-    val image_size: String = "landscape_4_3"  // Varsayılan 4:3 aspect ratio
+    val image_size: String = "portrait_4_3"
 ) {
     companion object {
         fun create(
@@ -229,7 +152,7 @@ data class FalRequest(
             enhancePrompt: Boolean = true,
             syncMode: Boolean = true,
             webhookUrl: String? = null,
-            imageSize: String = "landscape_4_3"
+            imageSize: String = "portrait_4_3"
         ) = FalRequest(
             prompt = prompt,
             image_url = imageUrl,
@@ -251,7 +174,7 @@ data class SubmitResponse(
     val requestId: String get() = request_id
 }
 
-// Response Data Classes
+
 data class KontextResult(
     val images: List<KontextImage> = emptyList(),
     val timings: Map<String, Any>? = null,
@@ -262,31 +185,115 @@ data class KontextResult(
     
     companion object {
         fun fromMap(map: Map<String, Any>): KontextResult {
-            val images = (map["images"] as? List<Map<String, Any>>)?.map { imageMap ->
-                KontextImage(
-                    url = imageMap["url"] as? String ?: "",
-                    width = safeToInt(imageMap["width"]),
-                    height = safeToInt(imageMap["height"]),
-                    content_type = imageMap["content_type"] as? String ?: "image/jpeg"
-                )
-            } ?: emptyList()
+            return try {
+                val images = parseImages(map["images"])
+                val timings = parseTimings(map["timings"])
+                val seed = safeToInt(map["seed"])
+                val nsfwConcepts = parseNsfwConcepts(map["has_nsfw_concepts"])
 
-            return KontextResult(
-                images = images,
-                timings = map["timings"] as? Map<String, Any>,
-                seed = safeToInt(map["seed"]),
-                has_nsfw_concepts = map["has_nsfw_concepts"] as? List<Boolean>
-            )
+                KontextResult(
+                    images = images,
+                    timings = timings,
+                    seed = seed,
+                    has_nsfw_concepts = nsfwConcepts
+                )
+            } catch (e: Exception) {
+                KontextResult(
+                    images = emptyList(),
+                    timings = null,
+                    seed = null,
+                    has_nsfw_concepts = null
+                )
+            }
+        }
+
+        private fun parseImages(imagesValue: Any?): List<KontextImage> {
+            return try {
+                when (imagesValue) {
+                    is List<*> -> {
+                        imagesValue.mapNotNull { imageItem ->
+                            when (imageItem) {
+                                is Map<*, *> -> {
+                                    val imageMap = imageItem as? Map<String, Any> ?: return@mapNotNull null
+                                    KontextImage(
+                                        url = imageMap["url"] as? String ?: "",
+                                        width = safeToInt(imageMap["width"]),
+                                        height = safeToInt(imageMap["height"]),
+                                        content_type = imageMap["content_type"] as? String ?: "image/jpeg"
+                                    )
+                                }
+                                else -> null
+                            }
+                        }
+                    }
+                    else -> emptyList()
+                }
+            } catch (e: Exception) {
+                emptyList()
+            }
+        }
+
+        private fun parseTimings(timingsValue: Any?): Map<String, Any>? {
+            return try {
+                timingsValue as? Map<String, Any>
+            } catch (e: Exception) {
+                null
+            }
+        }
+
+        private fun parseNsfwConcepts(nsfwValue: Any?): List<Boolean>? {
+            return try {
+                when (nsfwValue) {
+                    is List<*> -> {
+                        nsfwValue.mapNotNull { it as? Boolean }
+                    }
+                    else -> null
+                }
+            } catch (e: Exception) {
+                null
+            }
         }
         
-        // Güvenli integer dönüşümü için yardımcı fonksiyon
+
         private fun safeToInt(value: Any?): Int {
-            return when (value) {
-                is Int -> value
-                is Double -> value.toInt()
-                is Float -> value.toInt()
-                is String -> value.toIntOrNull() ?: 0
-                else -> 0
+            return try {
+                when (value) {
+                    is Int -> value
+                    is Long -> value.toInt()
+                    is Double -> {
+                        if (value.isFinite()) value.toInt() else 0
+                    }
+                    is Float -> {
+                        if (value.isFinite()) value.toInt() else 0
+                    }
+                    is String -> {
+                        val cleanValue = value.trim()
+                        when {
+                            cleanValue.isEmpty() -> 0
+                            cleanValue.equals("null", ignoreCase = true) -> 0
+                            cleanValue.equals("undefined", ignoreCase = true) -> 0
+                            cleanValue.equals("NaN", ignoreCase = true) -> 0
+                            cleanValue.equals("Infinity", ignoreCase = true) -> 0
+                            cleanValue.equals("-Infinity", ignoreCase = true) -> 0
+                            else -> {
+                                val doubleValue = cleanValue.toDoubleOrNull()
+                                if (doubleValue != null && doubleValue.isFinite()) {
+                                    doubleValue.toInt()
+                                } else {
+                                    0
+                                }
+                            }
+                        }
+                    }
+                    null -> 0
+                    else -> {
+                        safeToInt(value.toString())
+                    }
+                }
+            } catch (e: NumberFormatException) {
+                0
+            } catch (e: Exception) {
+                0
             }
         }
     }
@@ -308,4 +315,55 @@ data class RequestStatus(
 ) {
     val isCompleted: Boolean get() = status.lowercase() == "completed"
     val logsText: String? get() = logs?.joinToString("\n")
+}
+
+
+class SafeIntegerDeserializer : JsonDeserializer<Int> {
+    override fun deserialize(json: JsonElement?, typeOfT: Type?, context: JsonDeserializationContext?): Int {
+        return try {
+            when {
+                json == null || json.isJsonNull -> 0
+                json.isJsonPrimitive -> {
+                    val primitive = json.asJsonPrimitive
+                    when {
+                        primitive.isNumber -> {
+                            val number = primitive.asNumber
+                            when (number) {
+                                is Int -> number
+                                is Long -> number.toInt()
+                                is Double -> if (number.isFinite()) number.toInt() else 0
+                                is Float -> if (number.isFinite()) number.toInt() else 0
+                                else -> number.toInt()
+                            }
+                        }
+                        primitive.isString -> {
+                            val stringValue = primitive.asString.trim()
+                            when {
+                                stringValue.isEmpty() -> 0
+                                stringValue.equals("null", ignoreCase = true) -> 0
+                                stringValue.equals("undefined", ignoreCase = true) -> 0
+                                stringValue.equals("NaN", ignoreCase = true) -> 0
+                                stringValue.equals("Infinity", ignoreCase = true) -> 0
+                                stringValue.equals("-Infinity", ignoreCase = true) -> 0
+                                else -> {
+                                    val doubleValue = stringValue.toDoubleOrNull()
+                                    if (doubleValue != null && doubleValue.isFinite()) {
+                                        doubleValue.toInt()
+                                    } else {
+                                        0
+                                    }
+                                }
+                            }
+                        }
+                        else -> 0
+                    }
+                }
+                else -> 0
+            }
+        } catch (e: NumberFormatException) {
+            0
+        } catch (e: Exception) {
+            0
+        }
+    }
 }

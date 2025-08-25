@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Suitify Modern AI Palette -->
-    <color name="suitify_primary">#6366F1</color>
+    <color name="suitify_primary">#2b85ca</color>
     <color name="suitify_dark_bg">#F8FAFC</color>
     <color name="suitify_surface">#FFFFFF</color>
     <color name="suitify_card">#F1F5F9</color>

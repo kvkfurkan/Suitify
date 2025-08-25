@@ -17,6 +17,8 @@ import dev.furkankavak.suitify.utils.PhotoManager
 import dev.furkankavak.suitify.api.FalKontextApi
 import dev.furkankavak.suitify.databinding.FragmentPhotoUploadBinding
 import androidx.core.net.toUri
+import androidx.navigation.fragment.findNavController
+import com.google.gson.Gson
 
 class PhotoUploadFragment : Fragment() {
     
@@ -37,29 +39,24 @@ class PhotoUploadFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        
-        // PhotoManager'ı başlat
+
         photoManager = PhotoManager(requireContext())
-        
-        // UI'yi ayarla
+
         setupUI()
-        
-        // Gelen fotoğrafı yükle
+
         loadSelectedImage()
     }
 
     private fun setupUI() {
-        // Edit button click listener
+
         binding.btnEditPhoto.setOnClickListener {
             if (isImageReadyForApi()) {
-                // Sabit prompt kullan - profesyonel vesikalık fotoğraf için
                 editPhotoWithAI()
             } else {
                 Toast.makeText(requireContext(), "Fotoğraf henüz hazır değil", Toast.LENGTH_SHORT).show()
             }
         }
-        
-        // Initially hide progress bar
+
         binding.progressBar.visibility = View.GONE
     }
 
@@ -68,11 +65,9 @@ class PhotoUploadFragment : Fragment() {
         
         if (!selectedImageUriString.isNullOrEmpty()) {
             selectedImageUri = selectedImageUriString.toUri()
-            
-            // Prepare image for API
+
             prepareImageForApi(selectedImageUri!!)
-            
-            // Load image with Glide
+
             val requestOptions = RequestOptions()
                 .diskCacheStrategy(DiskCacheStrategy.NONE)
                 .skipMemoryCache(true)
@@ -122,29 +117,53 @@ class PhotoUploadFragment : Fragment() {
 
     private fun editPhotoWithAI() {
         optimizedImageData?.let { imageData ->
-            // UI'yi güncelle
+
             binding.progressBar.visibility = View.VISIBLE
             binding.btnEditPhoto.isEnabled = false
             binding.btnEditPhoto.text = "İşleniyor..."
             
             lifecycleScope.launch {
                 try {
-                    // Optimize edilmiş vesikalık fotoğraf promptu kullan
-                    val prompt = FalKontextApi.PASSPORT_PHOTO_PROMPT
+                    val prompt = FalKontextApi.DEFAULT_PROMPT
                     
                     val result = FalKontextApi.processImage(imageData, prompt)
                     
                     result.onSuccess { kontextResult ->
-                        handleEditSuccess(kontextResult)
+                        if (kontextResult.images.isEmpty()) {
+                            handleEditError("API başarılı ama resim üretilemedi. Lütfen tekrar deneyin.")
+                        } else {
+                            handleEditSuccess(kontextResult)
+                        }
                     }.onFailure { exception ->
-                        handleEditError(exception.message ?: "Bilinmeyen hata")
+                        val errorMessage = when (exception) {
+                            is NumberFormatException -> 
+                                "Sunucu yanıtında sayısal veri hatası. Lütfen tekrar deneyin."
+                            is com.google.gson.JsonSyntaxException -> 
+                                "Sunucu yanıtı işlenirken hata oluştu. Lütfen tekrar deneyin."
+                            is java.net.SocketTimeoutException -> 
+                                "İstek zaman aşımına uğradı. İnternet bağlantınızı kontrol edin."
+                            is java.net.UnknownHostException -> 
+                                "İnternet bağlantısı bulunamadı. Bağlantınızı kontrol edin."
+                            is retrofit2.HttpException -> {
+                                when (exception.code()) {
+                                    401 -> "API anahtarı geçersiz. Uygulama yöneticisi ile iletişime geçin."
+                                    429 -> "Çok fazla istek gönderildi. Lütfen biraz bekleyin."
+                                    500, 502, 503 -> "Sunucu hatası. Lütfen daha sonra tekrar deneyin."
+                                    else -> "Sunucu hatası (${exception.code()}). Lütfen tekrar deneyin."
+                                }
+                            }
+                            else -> exception.message ?: "Bilinmeyen hata oluştu. Lütfen tekrar deneyin."
+                        }
+                        handleEditError(errorMessage)
                     }
                 } catch (e: NumberFormatException) {
-                    handleEditError("Sayı formatı hatası: ${e.message}")
+                    handleEditError("Veri formatı hatası. Lütfen tekrar deneyin.")
                 } catch (e: com.google.gson.JsonSyntaxException) {
-                    handleEditError("JSON parse hatası: ${e.message}")
+                    handleEditError("Sunucu yanıtı işlenirken hata. Lütfen tekrar deneyin.")
+                } catch (e: OutOfMemoryError) {
+                    handleEditError("Bellek yetersiz. Lütfen uygulamayı yeniden başlatın.")
                 } catch (e: Exception) {
-                    handleEditError("API çağrısında hata: ${e.javaClass.simpleName} - ${e.message}")
+                    handleEditError("Beklenmeyen hata: ${e.javaClass.simpleName}. Lütfen tekrar deneyin.")
                 }
             }
         } ?: run {
@@ -153,31 +172,31 @@ class PhotoUploadFragment : Fragment() {
     }
 
     private fun handleEditSuccess(kontextResult: dev.furkankavak.suitify.api.KontextResult) {
-        // UI'yi sıfırla
         binding.progressBar.visibility = View.GONE
         binding.btnEditPhoto.isEnabled = true
-        binding.btnEditPhoto.text = "🎨  Profesyonel Vesikalık Oluştur"
+        binding.btnEditPhoto.text = "Profesyonel Vesikalık Oluştur"
         
         if (kontextResult.images.isNotEmpty()) {
-            val editedImageUrl = kontextResult.images.first().url
-            
-            // Düzenlenmiş fotoğrafı göster
-            Glide.with(this)
-                .load(editedImageUrl)
-                .transform(RoundedCorners(32)) // Yuvarlak köşeler ekle
-                .into(binding.ivUploadedPhoto)
-            
             Toast.makeText(requireContext(), "Fotoğraf başarıyla düzenlendi!", Toast.LENGTH_LONG).show()
+
+            val bundle = Bundle().apply {
+                val gson = Gson()
+                putString("kontextResult", gson.toJson(kontextResult))
+            }
+            
+            findNavController().navigate(
+                dev.furkankavak.suitify.R.id.action_photoUploadFragment_to_resultFragment,
+                bundle
+            )
         } else {
             Toast.makeText(requireContext(), "Düzenlenmiş fotoğraf alınamadı", Toast.LENGTH_LONG).show()
         }
     }
 
     private fun handleEditError(errorMessage: String) {
-        // UI'yi sıfırla
         binding.progressBar.visibility = View.GONE
         binding.btnEditPhoto.isEnabled = true
-        binding.btnEditPhoto.text = "🎨  Profesyonel Vesikalık Oluştur"
+        binding.btnEditPhoto.text = "Profesyonel Vesikalık Oluştur"
         
         Toast.makeText(requireContext(), "Hata: $errorMessage", Toast.LENGTH_LONG).show()
     }

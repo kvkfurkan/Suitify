@@ -108,7 +108,7 @@ class HomeFragment : Fragment() {
 
 
     private fun showSelectedImage(imageUri: Uri) {
-        // Fotoğraf seçilir seçilmez direkt PhotoUploadFragment'a geç
+
         val bundle = Bundle()
         bundle.putString("selectedImageUri", imageUri.toString())
         val action = R.id.action_homeFragment_to_photoUploadFragment
