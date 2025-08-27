@@ -4,7 +4,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/suitify_dark_bg"
+    android:background="@drawable/suitify_splash_radial"
     tools:context=".fragments.HomeFragment">
 
     <LinearLayout
@@ -24,7 +24,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Suitify"
-                android:textColor="@color/suitify_text_primary"
+                android:textColor="@color/white"
                 android:textSize="32sp"
                 android:textStyle="bold"
                 android:fontFamily="@font/helvatica" />
@@ -43,7 +43,7 @@
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="320dp"
-            app:cardBackgroundColor="@color/suitify_surface"
+            app:cardBackgroundColor="#F0F0F0"
             app:cardCornerRadius="20dp"
             app:cardElevation="2dp"
             app:strokeWidth="1dp"
@@ -58,31 +58,10 @@
                 android:gravity="center"
                 android:padding="32dp">
 
-
-                <androidx.cardview.widget.CardView
-                    android:layout_width="120dp"
-                    android:layout_height="120dp"
-                    app:cardBackgroundColor="@color/suitify_card"
-                    app:cardCornerRadius="60dp"
-                    app:cardElevation="0dp"
-                    android:layout_marginBottom="24dp">
-
-                    <ImageView
-                        android:id="@+id/mainImageView"
-                        android:layout_width="80dp"
-                        android:layout_height="80dp"
-                        android:layout_gravity="center"
-                        android:src="@drawable/suit_logo"
-                        android:scaleType="centerInside"
-                        android:contentDescription="Suitify Logo" />
-
-                </androidx.cardview.widget.CardView>
-
-
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Let's Suit Up"
+                    android:text="Resim çekerken nelere dikkat etmeliyim?"
                     android:textColor="@color/suitify_text_primary"
                     android:textSize="20sp"
                     android:textStyle="bold"
@@ -93,9 +72,9 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Fotoğrafınızı yükleyin ve yapay zeka ile profesyonel takım elbiseli vesikalık haline getirin"
+                    android:text="En iyi sonuç için fotoğrafınız net olmalı, yüzünüz doğrudan ve açıkça görünmeli, ışıklandırma yeterli olmalı ve kameraya doğru bakmalısınız."
                     android:textColor="@color/suitify_text_secondary"
-                    android:textSize="12sp"
+                    android:textSize="16sp"
                     android:gravity="center"
                     android:lineSpacingExtra="4dp" />
 

@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@color/suitify_dark_bg"
+    android:background="@drawable/suitify_splash_radial"
     android:padding="16dp"
     tools:context=".fragments.PhotoUploadFragment">
 
@@ -14,7 +14,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Fotoğrafınızı Onaylayın"
-        android:textColor="@color/suitify_text_primary"
+        android:textColor="@color/white"
         android:textSize="24sp"
         android:textStyle="bold"
         android:fontFamily="@font/helvatica"

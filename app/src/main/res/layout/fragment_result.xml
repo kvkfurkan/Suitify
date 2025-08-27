@@ -4,7 +4,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/suitify_dark_bg"
+    android:background="@drawable/suitify_splash_radial"
     tools:context=".fragments.ResultFragment">
 
     <FrameLayout
@@ -23,7 +23,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="✨ Vesikalık Fotoğrafınız Hazır!"
-                android:textColor="@color/suitify_text_primary"
+                android:textColor="@color/white"
                 android:textSize="24sp"
                 android:textStyle="bold"
                 android:gravity="center"

@@ -5,12 +5,12 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".fragments.SplashFragment"
-    android:background="#0e2a3f">
+    android:background="@drawable/suitify_splash_radial">
 
     <ImageView
         android:id="@+id/ivLogo"
         android:layout_gravity="center"
-        android:src="@drawable/suit_logo"
+        android:src="@drawable/suitify"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="80dp"

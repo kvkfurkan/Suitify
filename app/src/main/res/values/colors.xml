@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="suitify_primary">#2b85ca</color>
+    <color name="suitify_primary">#1a527d</color>
     <color name="suitify_dark_bg">#F8FAFC</color>
     <color name="suitify_surface">#FFFFFF</color>
     <color name="suitify_card">#F1F5F9</color>
@@ -11,4 +11,10 @@
     <color name="suitify_success">#10B981</color>
     <color name="white">#FFFFFF</color>
     <color name="black">#FF000000</color>
+
+    <color name="suitify_black">#0B0E13</color>
+    <color name="suitify_navy_dark">#0F1B2D</color>
+    <color name="suitify_navy_mid">#1A2B44</color>
+    <!-- Android 12 sistem splash'ının düz arka plan rengi (gradyene en yakın orta ton) -->
+    <color name="splash_solid">#0E141C</color>
 </resources>
